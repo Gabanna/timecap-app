@@ -46,7 +46,7 @@ public abstract class PostInstantTask extends AsyncTask<PostRawData, Void, JSONO
             connection = sendRequest(connection, params[0]);
             result = getResponse(connection);
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             try {
                 result = new JSONObject();
                 result.put("responseCode", 400);
@@ -57,9 +57,6 @@ public abstract class PostInstantTask extends AsyncTask<PostRawData, Void, JSONO
             } catch (JSONException e1) {
                 Log.e(TAG, e1.getMessage());
             }
-
-        } catch (JSONException e) {
-            Log.e(TAG, e.getMessage());
 
         } finally {
             if (null != connection) {
@@ -73,6 +70,11 @@ public abstract class PostInstantTask extends AsyncTask<PostRawData, Void, JSONO
     @Override
     protected void onPostExecute(JSONObject JSONObject) {
         onResponse(JSONObject);
+    }
+
+    @Override
+    protected void onCancelled(JSONObject jsonObject) {
+        onResponse(jsonObject);
     }
 
     private HttpURLConnection sendRequest(HttpURLConnection connection, PostRawData postRawData) throws IOException, JSONException {
