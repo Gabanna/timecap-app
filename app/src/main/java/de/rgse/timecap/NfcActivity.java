@@ -1,6 +1,7 @@
 package de.rgse.timecap;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
@@ -17,9 +18,12 @@ import java.util.UUID;
 
 import de.rgse.timecap.model.PostRawData;
 import de.rgse.timecap.tasks.PostInstantTask;
+import de.rgse.timecap.tasks.RestErrorDialog;
 import de.rgse.timecap.tasks.TimecapTaskException;
 
 public class NfcActivity extends Activity {
+
+    private static final String TAG = NfcActivity.class.getSimpleName();
 
     private String intentID;
 
@@ -29,7 +33,7 @@ public class NfcActivity extends Activity {
         setContentView(R.layout.activity_nfc);
 
         Intent intent = getIntent();
-        if(null == intentID || !intentID.equals(intent.getExtras().getString("id"))) {
+        if (null == intentID || !intentID.equals(intent.getExtras().getString("id"))) {
             onNewIntent(intent);
         }
     }
@@ -77,12 +81,11 @@ public class NfcActivity extends Activity {
         }
     }
 
-
-    private void updateTextview(JSONObject json) throws JSONException{
+    private void updateTextview(JSONObject json) throws JSONException {
         LinearLayout layout = (LinearLayout) findViewById(R.id.result);
         TextView conclusion = new TextView(this);
 
-        if(json.getInt("responseCode") == 200) {
+        if (json.getInt("responseCode") == 200) {
             JSONObject data = json.getJSONObject("data");
             conclusion.setText(data.getString("locationId"));
             layout.addView(conclusion);
@@ -96,8 +99,9 @@ public class NfcActivity extends Activity {
             layout.addView(timeView);
 
         } else {
-            conclusion.setText(json.toString());
-            layout.addView(conclusion);
+            String message = json.getString("message");
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(message).setMessage(json.toString()).show();
         }
 
     }
