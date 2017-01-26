@@ -8,6 +8,8 @@ import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -16,12 +18,13 @@ import org.json.JSONObject;
 
 import java.util.UUID;
 
+import de.rgse.timecap.fassade.JsonObject;
 import de.rgse.timecap.model.PostRawData;
 import de.rgse.timecap.tasks.PostInstantTask;
 import de.rgse.timecap.tasks.RestErrorDialog;
 import de.rgse.timecap.tasks.TimecapTaskException;
 
-public class NfcActivity extends Activity {
+public class NfcActivity extends AppCompatActivity {
 
     private static final String TAG = NfcActivity.class.getSimpleName();
 
@@ -31,6 +34,8 @@ public class NfcActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_nfc);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         Intent intent = getIntent();
         if (null == intentID || !intentID.equals(intent.getExtras().getString("id"))) {
@@ -56,37 +61,28 @@ public class NfcActivity extends Activity {
                 NdefRecord[] records = messages[0].getRecords();
                 String payload = new String(records[0].getPayload());
 
-                try {
-                    JSONObject payloadData = new JSONObject(payload);
-                    String locationId = payloadData.getString("locationId");
-                    String userId = "testuser";
-                    PostRawData postRawData = new PostRawData(userId, locationId);
+                JsonObject payloadData = new JsonObject(payload);
+                String locationId = payloadData.get("locationId");
+                String userId = "testuser";
+                PostRawData postRawData = new PostRawData(userId, locationId);
 
-                    PostInstantTask postInstantTask = new PostInstantTask() {
-                        @Override
-                        public void onResponse(JSONObject jsonObject) {
-                            try {
-                                updateTextview(jsonObject);
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    };
-                    postInstantTask.execute(postRawData);
-
-                } catch (TimecapTaskException | JSONException e) {
-                    throw new RuntimeException(e);
-                }
+                PostInstantTask postInstantTask = new PostInstantTask() {
+                    @Override
+                    public void onResponse(JsonObject jsonObject) {
+                        updateTextview(jsonObject);
+                    }
+                };
+                postInstantTask.execute(postRawData);
             }
         }
     }
 
-    private void updateTextview(JSONObject json) throws JSONException {
-        LinearLayout layout = (LinearLayout) findViewById(R.id.result);
+    private void updateTextview(JsonObject json) {
+        LinearLayout layout = (LinearLayout) findViewById(R.id.activity_nfc);
         TextView conclusion = new TextView(this);
 
         if (json.getInt("responseCode") == 200) {
-            JSONObject data = json.getJSONObject("data");
+            JsonObject data = json.get("data");
             conclusion.setText(data.getString("locationId"));
             layout.addView(conclusion);
 
