@@ -1,7 +1,5 @@
 package de.rgse.timecap;
 
-import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
@@ -13,16 +11,11 @@ import android.support.v7.widget.Toolbar;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.UUID;
 
 import de.rgse.timecap.fassade.JsonObject;
 import de.rgse.timecap.model.PostRawData;
 import de.rgse.timecap.tasks.PostInstantTask;
-import de.rgse.timecap.tasks.RestErrorDialog;
-import de.rgse.timecap.tasks.TimecapTaskException;
 
 public class NfcActivity extends AppCompatActivity {
 
@@ -95,9 +88,7 @@ public class NfcActivity extends AppCompatActivity {
             layout.addView(timeView);
 
         } else {
-            String message = json.getString("message");
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(message).setMessage(json.toString()).show();
+            ErrorDialog.show(json, NfcActivity.this);
         }
 
     }

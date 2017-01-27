@@ -1,5 +1,7 @@
 package de.rgse.timecap.fassade;
 
+import android.support.annotation.NonNull;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -8,14 +10,16 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.AbstractList;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import de.rgse.timecap.fassade.exception.JsonException;
 import de.rgse.timecap.service.IOUtil;
 
-public class JsonArray extends AbstractList<JsonObject> {
+public class JsonArray implements Iterable<JsonObject> {
 
-    private final JSONArray core;
+    private JSONArray core;
 
     public JsonArray() {
         this.core = new JSONArray();
@@ -43,12 +47,11 @@ public class JsonArray extends AbstractList<JsonObject> {
         this.core = data;
     }
 
-    public JsonArray addItem(Object object){
+    public JsonArray add(JsonObject object) {
         core.put(object);
         return this;
     }
 
-    @Override
     public JsonObject get(int index) throws JsonException {
         JsonObject result = null;
         try {
@@ -62,7 +65,6 @@ public class JsonArray extends AbstractList<JsonObject> {
         return result;
     }
 
-    @Override
     public int size() {
         return core.length();
     }
@@ -72,14 +74,13 @@ public class JsonArray extends AbstractList<JsonObject> {
         return core.toString();
     }
 
-    @Override
-    public Object[] toArray() {
+    public JsonObject[] toArray() {
         try {
             final JSONArray jsonArray = new JSONArray(core.toString());
-            Object[] result = new Object[jsonArray.length()];
+            JsonObject[] result = new JsonObject[jsonArray.length()];
 
             for (int i = 0; i < jsonArray.length(); i++) {
-                result[i] = jsonArray.get(i);
+                result[i] = (JsonObject) jsonArray.get(i);
             }
 
             return result;
@@ -90,29 +91,24 @@ public class JsonArray extends AbstractList<JsonObject> {
 
     @Override
     public Iterator<JsonObject> iterator() {
-        try {
-            final JSONArray jsonArray = new JSONArray(core.toString());
-            return new Iterator<JsonObject>() {
-                int index = -1;
+        return new Iterator<JsonObject>() {
+            int index = -1;
 
-                @Override
-                public boolean hasNext() {
-                    return index < jsonArray.length();
-                }
+            @Override
+            public boolean hasNext() {
+                return index < core.length() - 1;
+            }
 
-                @Override
-                public JsonObject next() {
-                    JsonObject result = null;
-                    try {
-                        result = new JsonObject(jsonArray.getJSONObject(++index));
-                    } catch (JSONException e) {
-                        throw new JsonException(e);
-                    }
-                    return null;
+            @Override
+            public JsonObject next() {
+                JsonObject result = null;
+                try {
+                    result = new JsonObject(core.getJSONObject(++index));
+                } catch (JSONException e) {
+                    throw new JsonException(e);
                 }
-            };
-        } catch (JSONException e) {
-            throw new JsonException(e);
-        }
+                return result;
+            }
+        };
     }
 }
