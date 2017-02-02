@@ -3,4 +3,13 @@
     <string name="action_settings">Settings</string>
     <string name="title_activity_nfc">Timecap</string>
     <string name="title_activity_intent_list">Timecap</string>
+    <string name="server_connection_failed">Verbindungsfehler</string>
+    <string name="server_connection_failed_detail">Es konnte keine Verbindung zum Server hergestellt werden.</string>
+    <string name="login">Anmelden</string>
+    <string name="title_activity_user">UserActivity</string>
+    <string name="location">Ort</string>
+    <string name="user">Benutzer</string>
+    <string name="timestamp">Zeitpunkt</string>
+    <string name="capture_label">Folgende Zeit wurde erfasst:</string>
+    <string name="signedIn_user">angemeldeter Benutzer</string>
 </resources>

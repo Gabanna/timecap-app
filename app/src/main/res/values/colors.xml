@@ -6,4 +6,6 @@
     <color name="colorBackground">#FFF</color>
     <color name="white">#FFF</color>
     <color name="holo_blue">#33b5e5</color>
+    <color name="holo_blue_light">#e8f7fc</color>
+    <color name="apptheme_color">#33b5e5</color>
 </resources>

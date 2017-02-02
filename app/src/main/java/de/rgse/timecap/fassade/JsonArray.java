@@ -1,20 +1,17 @@
 package de.rgse.timecap.fassade;
 
-import android.support.annotation.NonNull;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.AbstractList;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 import de.rgse.timecap.fassade.exception.JsonException;
+import de.rgse.timecap.model.Timeevent;
 import de.rgse.timecap.service.IOUtil;
 
 public class JsonArray implements Iterable<JsonObject> {
@@ -22,7 +19,7 @@ public class JsonArray implements Iterable<JsonObject> {
     private JSONArray core;
 
     public JsonArray() {
-        this.core = new JSONArray();
+        core = new JSONArray();
     }
 
     public JsonArray(InputStream inputStream) {
@@ -37,14 +34,10 @@ public class JsonArray implements Iterable<JsonObject> {
 
     public JsonArray(String data) throws JsonException {
         try {
-            this.core = new JSONArray(data);
+            this.core = null == data ? new JSONArray() : new JSONArray(data);
         } catch (JSONException e) {
             throw new JsonException(e);
         }
-    }
-
-    public JsonArray(JSONArray data) {
-        this.core = data;
     }
 
     public JsonArray add(JsonObject object) {
@@ -53,9 +46,9 @@ public class JsonArray implements Iterable<JsonObject> {
     }
 
     public JsonObject get(int index) throws JsonException {
-        JsonObject result = null;
+        JsonObject result;
         try {
-            JSONObject jsonObject = core.getJSONObject(index);
+            String jsonObject = core.getString(index);
             result = new JsonObject(jsonObject);
 
         } catch (JSONException e) {
@@ -65,28 +58,23 @@ public class JsonArray implements Iterable<JsonObject> {
         return result;
     }
 
-    public int size() {
-        return core.length();
+    public List<Timeevent> getTimeevents() {
+        List<Timeevent> timeevents = null;
+        try {
+            timeevents = new ArrayList<>();
+            for (JsonObject jsonObject : this) {
+                timeevents.add(Timeevent.fromJson(jsonObject));
+            }
+        } catch (JsonException e) {
+            e.printStackTrace();
+        }
+
+        return timeevents;
     }
 
     @Override
     public String toString() {
         return core.toString();
-    }
-
-    public JsonObject[] toArray() {
-        try {
-            final JSONArray jsonArray = new JSONArray(core.toString());
-            JsonObject[] result = new JsonObject[jsonArray.length()];
-
-            for (int i = 0; i < jsonArray.length(); i++) {
-                result[i] = (JsonObject) jsonArray.get(i);
-            }
-
-            return result;
-        } catch (JSONException e) {
-            throw new JsonException(e);
-        }
     }
 
     @Override
@@ -101,14 +89,26 @@ public class JsonArray implements Iterable<JsonObject> {
 
             @Override
             public JsonObject next() {
-                JsonObject result = null;
+                JsonObject result;
                 try {
-                    result = new JsonObject(core.getJSONObject(++index));
+                    result = new JsonObject(core.getString(++index));
                 } catch (JSONException e) {
                     throw new JsonException(e);
                 }
                 return result;
             }
         };
+    }
+
+    public int size() {
+        return core.length();
+    }
+
+    public void remove(int i) {
+        core.remove(i);
+    }
+
+    public boolean isEmpty() {
+        return size() == 0;
     }
 }

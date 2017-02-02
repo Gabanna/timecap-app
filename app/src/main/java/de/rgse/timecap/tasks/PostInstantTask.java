@@ -1,6 +1,5 @@
 package de.rgse.timecap.tasks;
 
-import android.os.AsyncTask;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -16,7 +15,7 @@ import de.rgse.timecap.service.IOUtil;
 import de.rgse.timecap.service.JwtService;
 import de.rgse.timecap.service.TimecapProperties;
 
-public abstract class PostInstantTask extends AsyncTask<PostRawData, Void, JsonObject> {
+public abstract class PostInstantTask extends AbstractRestTask<PostRawData> {
 
     private static final String TAG = "PostInstantTask";
 
@@ -25,15 +24,13 @@ public abstract class PostInstantTask extends AsyncTask<PostRawData, Void, JsonO
 
     public PostInstantTask() throws TimecapTaskException {
         try {
-            urlString = TimecapProperties.readProperty("rest.postInstant");
+            urlString = String.format("%s/time-events", TimecapProperties.readProperty("rest.baseUrl"));
             jwtService = new JwtService();
 
         } catch (IOException e) {
             throw new TimecapTaskException(e);
         }
     }
-
-    public abstract void onResponse(JsonObject json);
 
     @Override
     protected JsonObject doInBackground(PostRawData[] params) {
@@ -61,16 +58,6 @@ public abstract class PostInstantTask extends AsyncTask<PostRawData, Void, JsonO
         return result;
     }
 
-    @Override
-    protected void onPostExecute(JsonObject json) {
-        onResponse(json);
-    }
-
-    @Override
-    protected void onCancelled(JsonObject jsonObject) {
-        onResponse(jsonObject);
-    }
-
     private HttpURLConnection sendRequest(HttpURLConnection connection, PostRawData postRawData) throws IOException, JSONException {
         String jwt = jwtService.generateJwt(postRawData.getUserId());
 
@@ -82,7 +69,7 @@ public abstract class PostInstantTask extends AsyncTask<PostRawData, Void, JsonO
 
         connection.setDoOutput(true);
         DataOutputStream dataOutputStream = new DataOutputStream(connection.getOutputStream());
-        dataOutputStream.writeBytes(postRawData.asJson().toString());
+        dataOutputStream.writeBytes(postRawData.toJson().toString());
         dataOutputStream.flush();
         dataOutputStream.close();
 

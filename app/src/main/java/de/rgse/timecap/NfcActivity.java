@@ -1,6 +1,11 @@
 package de.rgse.timecap;
 
+import android.app.usage.NetworkStatsManager;
+import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.wifi.WifiManager;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
@@ -8,20 +13,37 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
 import java.util.UUID;
 
 import de.rgse.timecap.fassade.JsonObject;
 import de.rgse.timecap.model.PostRawData;
+import de.rgse.timecap.model.Timeevent;
+import de.rgse.timecap.service.LoginService;
+import de.rgse.timecap.service.UserData;
 import de.rgse.timecap.tasks.PostInstantTask;
+
+import static android.R.attr.data;
 
 public class NfcActivity extends AppCompatActivity {
 
-    private static final String TAG = NfcActivity.class.getSimpleName();
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+    private static final SimpleDateFormat DISPLAY_FORMAT = new SimpleDateFormat("dd. MMMM HH:mm 'Uhr'", Locale.getDefault());
 
     private String intentID;
+    private TextView user, userLabel, location, locationLabel, time, timeLabel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,9 +52,24 @@ public class NfcActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        time = (TextView) findViewById(R.id.time_value);
+        timeLabel = (TextView) findViewById(R.id.time_label);
+        user = (TextView) findViewById(R.id.user_value);
+        userLabel = (TextView) findViewById(R.id.user_label);
+        location = (TextView) findViewById(R.id.location_value);
+        locationLabel = (TextView) findViewById(R.id.location_label);
+
         Intent intent = getIntent();
         if (null == intentID || !intentID.equals(intent.getExtras().getString("id"))) {
             onNewIntent(intent);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (!UserData.hasAccount(this)) {
+            new LoginService(this).login();
         }
     }
 
@@ -56,41 +93,84 @@ public class NfcActivity extends AppCompatActivity {
 
                 JsonObject payloadData = new JsonObject(payload);
                 String locationId = payloadData.get("locationId");
-                String userId = "testuser";
+                String userId = UserData.getAccount(this).get("email");
                 PostRawData postRawData = new PostRawData(userId, locationId);
 
-                PostInstantTask postInstantTask = new PostInstantTask() {
-                    @Override
-                    public void onResponse(JsonObject jsonObject) {
-                        updateTextview(jsonObject);
-                    }
-                };
-                postInstantTask.execute(postRawData);
+                ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
+                if (connectivityManager.getActiveNetworkInfo() != null) {
+                    createTask(postRawData).execute(postRawData);
+
+                } else {
+                    LinearLayout layout = (LinearLayout) findViewById(R.id.content_nfc);
+                    layout.removeView(findViewById(R.id.loading));
+
+                    Calendar calendar = Calendar.getInstance();
+                    postRawData.setInstant(Calendar.getInstance());
+                    findViewById(R.id.main_label).setVisibility(View.VISIBLE);
+
+                    time.setText(DISPLAY_FORMAT.format(calendar.getTime()));
+                    timeLabel.setVisibility(View.VISIBLE);
+                    user.setText(postRawData.getUserId());
+                    userLabel.setVisibility(View.VISIBLE);
+                    location.setText(postRawData.getLocationId());
+
+                    locationLabel.setVisibility(View.VISIBLE);
+                    Toast.makeText(this, "Es ist keine Internetverbindung vorhanden.\nDie Zeit wird später eingetragen.", Toast.LENGTH_LONG).show();
+
+                    UserData.queueEvent(this, postRawData);
+                }
             }
         }
     }
 
-    private void updateTextview(JsonObject json) {
-        LinearLayout layout = (LinearLayout) findViewById(R.id.activity_nfc);
-        TextView conclusion = new TextView(this);
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
 
-        if (json.getInt("responseCode") == 200) {
-            JsonObject data = json.get("data");
-            conclusion.setText(data.getString("locationId"));
-            layout.addView(conclusion);
+        if (requestCode == LoginService.RC_SIGN_IN) {
+            GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            if (result.isSuccess()) {
+                GoogleSignInAccount account = result.getSignInAccount();
+                JsonObject jsonObject = JsonObject.createUserData(account);
+                UserData.instance(this).set("account", jsonObject.toString());
 
-            TextView userIdView = new TextView(this);
-            userIdView.setText(data.getString("userId"));
-            layout.addView(userIdView);
-
-            TextView timeView = new TextView(this);
-            timeView.setText(data.getString("instant"));
-            layout.addView(timeView);
-
-        } else {
-            ErrorDialog.show(json, NfcActivity.this);
+                onNewIntent(getIntent());
+            }
         }
-
     }
 
+    private PostInstantTask createTask(final PostRawData postRawData) {
+        return new PostInstantTask() {
+            @Override
+            public void done(JsonObject json) {
+                LinearLayout layout = (LinearLayout) findViewById(R.id.content_nfc);
+                layout.removeView(findViewById(R.id.loading));
+
+                findViewById(R.id.main_label).setVisibility(View.VISIBLE);
+
+                JsonObject data = json.get("data");
+                String formatedTime = null;
+                try {
+                    formatedTime = DISPLAY_FORMAT.format(DATE_FORMAT.parse(data.getString("instant")));
+
+                    time.setText(formatedTime);
+                    timeLabel.setVisibility(View.VISIBLE);
+                    user.setText(data.getString("userId"));
+                    userLabel.setVisibility(View.VISIBLE);
+                    location.setText(data.getString("locationId"));
+                    locationLabel.setVisibility(View.VISIBLE);
+
+                } catch (ParseException e) {
+                    ErrorDialog.show(e, NfcActivity.this);
+                }
+            }
+
+            @Override
+            public void fail(Integer responseCode, JsonObject data) {
+                UserData.queueEvent(NfcActivity.this, postRawData);
+                ErrorDialog.show(data, NfcActivity.this);
+            }
+        };
+    }
 }

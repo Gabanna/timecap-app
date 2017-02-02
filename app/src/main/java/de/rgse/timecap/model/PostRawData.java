@@ -3,18 +3,33 @@ package de.rgse.timecap.model;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-/**
- * Created by absolem on 23.01.17.
- */
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
+import de.rgse.timecap.fassade.JsonObject;
 
 public class PostRawData {
 
+    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yy-MM-dd'T'HH:mm:ss");
+
     private final String userId;
     private final String locationId;
+    private String instant;
 
-    public PostRawData(String userId, String locationId){
+    public PostRawData(JsonObject jsonObject) {
+        this.userId = jsonObject.get("userId");
+        this.locationId = jsonObject.get("locationId");
+        this.instant = jsonObject.get("instant");
+    }
+
+    public PostRawData(String userId, String locationId, Calendar instant) {
+        this.instant = null == instant ? null : DATE_FORMAT.format(instant.getTime());
         this.userId = userId;
         this.locationId = locationId;
+    }
+
+    public PostRawData(String userId, String locationId) {
+        this(userId, locationId, null);
     }
 
     public String getUserId() {
@@ -25,17 +40,30 @@ public class PostRawData {
         return locationId;
     }
 
-    public JSONObject asJson() throws JSONException {
-        JSONObject result = new JSONObject();
+    public String getInstant() {
+        return instant;
+    }
 
-        if(userId != null && !userId.isEmpty()) {
-            result.put("userId", userId);
+    public JsonObject toJson() {
+        JsonObject result = new JsonObject();
+
+        if (userId != null && !userId.isEmpty()) {
+            result.set("userId", userId);
         }
 
-        if(locationId != null && !locationId.isEmpty()) {
-            result.put("locationId", locationId);
+        if (locationId != null && !locationId.isEmpty()) {
+            result.set("locationId", locationId);
+        }
+
+
+        if (instant != null && !instant.isEmpty()) {
+            result.set("instant", instant);
         }
 
         return result;
+    }
+
+    public void setInstant(Calendar instant) {
+        this.instant = DATE_FORMAT.format(instant.getTime());
     }
 }

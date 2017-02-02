@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 
 import de.rgse.timecap.fassade.JsonArray;
 import de.rgse.timecap.fassade.JsonObject;
@@ -19,7 +20,7 @@ import de.rgse.timecap.service.IOUtil;
 import de.rgse.timecap.service.JwtService;
 import de.rgse.timecap.service.TimecapProperties;
 
-public abstract class GetInstantsTask extends AsyncTask<String, Void, JsonObject> {
+public abstract class GetInstantsTask extends AbstractRestTask<String> {
 
     private static final String TAG = GetInstantsTask.class.getSimpleName();
 
@@ -28,10 +29,8 @@ public abstract class GetInstantsTask extends AsyncTask<String, Void, JsonObject
 
     public GetInstantsTask() throws IOException {
         jwtService = new JwtService();
-        urlString = TimecapProperties.readProperty("rest.getInstants");
+        urlString = String.format("%s/time-events", TimecapProperties.readProperty("rest.baseUrl"));
     }
-
-    public abstract void onResponse(JsonObject json);
 
     @Override
     protected JsonObject doInBackground(String... params) {
@@ -40,13 +39,30 @@ public abstract class GetInstantsTask extends AsyncTask<String, Void, JsonObject
         HttpURLConnection connection = null;
         try {
             String userId = params[0];
-            connection = (HttpURLConnection) new URL(String.format("%s?userId=%s", urlString, userId)).openConnection();
+            String url = String.format("%s?userId=%s", urlString, userId);
+
+            if (params.length > 1) {
+                String year = params[1];
+                url += "&year=" + year;
+            }
+
+            if (params.length > 2) {
+                String month = params[2];
+                url += "&month=" + month;
+            }
+
+            if (params.length > 3) {
+                String day = params[3];
+                url += "&day=" + day;
+            }
+
+            connection = (HttpURLConnection) new URL(url).openConnection();
             connection = sendRequest(connection, userId);
             result = getResponse(connection);
 
         } catch (Exception e) {
             result = new JsonObject();
-            result.set("responseCode", 400)
+            result
                     .set("message", "unable to connect to server")
                     .set("error", e.getMessage());
 
@@ -59,12 +75,6 @@ public abstract class GetInstantsTask extends AsyncTask<String, Void, JsonObject
         }
 
         return result;
-    }
-
-    @Override
-    protected void onPostExecute(JsonObject json) {
-        super.onPostExecute(json);
-        onResponse(json);
     }
 
     private HttpURLConnection sendRequest(HttpURLConnection connection, String userId) throws IOException, JSONException {
@@ -98,9 +108,5 @@ public abstract class GetInstantsTask extends AsyncTask<String, Void, JsonObject
         }
 
         return result;
-    }
-
-    private boolean isSuccessfull(int responseCode) {
-        return responseCode >= 200 && responseCode < 300;
     }
 }

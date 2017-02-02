@@ -6,10 +6,6 @@ import android.util.Log;
 import java.io.IOException;
 import java.util.Properties;
 
-/**
- * Created by absolem on 24.01.17.
- */
-
 public class TimecapProperties extends Properties {
 
     private static final TimecapProperties INSTANCE = new TimecapProperties();

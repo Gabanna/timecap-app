@@ -1,12 +1,12 @@
 package de.rgse.timecap.fassade;
 
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Objects;
 
 import de.rgse.timecap.fassade.exception.JsonException;
 import de.rgse.timecap.service.IOUtil;
@@ -60,6 +60,10 @@ public class JsonObject {
         return get(name);
     }
 
+    public boolean hasValue(String name) {
+        return get(name) != null;
+    }
+
     public <T> T get(String name) {
         T result = null;
         try {
@@ -73,5 +77,13 @@ public class JsonObject {
     @Override
     public String toString() {
         return core.toString();
+    }
+
+
+    public static JsonObject createUserData(GoogleSignInAccount account) {
+        JsonObject result = new JsonObject();
+        result.set("email", account.getEmail());
+        result.set("photoUrl", account.getPhotoUrl().toString());
+        return result;
     }
 }
