@@ -11,16 +11,16 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import de.rgse.timecap.fassade.JsonObject;
+import de.rgse.timecap.service.IOUtil;
 import de.rgse.timecap.service.UserData;
 
 public class Timeevent {
-
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yy-MM-dd'T'HH:mm:ss");
 
     private final Logger LOGGER = LogManager.getLogManager().getLogger(getClass().getSimpleName());
 
@@ -51,8 +51,8 @@ public class Timeevent {
     public Calendar getInstantAsCalendar() {
         try {
             if (instantAsCalendar == null && instant != null) {
-                instantAsCalendar = GregorianCalendar.getInstance();
-                instantAsCalendar.setTime(DATE_FORMAT.parse(instant));
+                instantAsCalendar = GregorianCalendar.getInstance(Locale.GERMANY);
+                instantAsCalendar.setTime(IOUtil.formatDate(instant));
             }
         } catch (ParseException e) {
             LOGGER.log(Level.SEVERE, "Error while parsing instant", e);
@@ -85,7 +85,7 @@ public class Timeevent {
     }
 
     public Timeevent setInstant(Date instant) {
-        this.instant = DATE_FORMAT.format(instant);
+        this.instant = IOUtil.formatDate(instant);
         instantAsCalendar = Calendar.getInstance();
         instantAsCalendar.setTime(instant);
         return this;

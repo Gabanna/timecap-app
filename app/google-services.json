@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "775839257167",
+    "project_id": "firebase-timecap"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:775839257167:android:dd74473a0ab02501",
+        "android_client_info": {
+          "package_name": "de.rgse.timecap"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "775839257167-gvvpf37764euaikng7siviuie373t21j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "de.rgse.timecap",
+            "certificate_hash": "80BF94CE332AF20989BF5BB821ACB8CCA1FFF50D"
+          }
+        },
+        {
+          "client_id": "775839257167-nbu31320fij23s6f7nt4o5bbbmk3njmi.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAIMs8QZm0QThvxwgQ5S4lhMlhm9D6h4aU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

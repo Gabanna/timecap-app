@@ -13,11 +13,17 @@ import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 
+import java.util.Locale;
+
 import de.rgse.timecap.fassade.JsonObject;
 import de.rgse.timecap.service.LoginService;
 import de.rgse.timecap.service.UserData;
 
 public class MainActivity extends AppCompatActivity {
+
+    static {
+        Locale.setDefault(Locale.GERMANY);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

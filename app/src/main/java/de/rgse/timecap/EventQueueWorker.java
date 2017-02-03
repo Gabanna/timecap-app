@@ -72,7 +72,7 @@ public class EventQueueWorker extends BroadcastReceiver {
         String verbPluralPostfix = completed.size() > 1 ? "n" : "";
 
         android.support.v4.app.NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.timecap_logo)
                 .setContentTitle("Timecap")
                 .setContentText(String.format("%s Zeit%s wurde%s nachgetragen", completed.size(), timePluralPostfix, verbPluralPostfix));
 

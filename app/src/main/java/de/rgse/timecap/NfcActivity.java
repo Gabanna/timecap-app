@@ -31,6 +31,7 @@ import java.util.UUID;
 import de.rgse.timecap.fassade.JsonObject;
 import de.rgse.timecap.model.PostRawData;
 import de.rgse.timecap.model.Timeevent;
+import de.rgse.timecap.service.IOUtil;
 import de.rgse.timecap.service.LoginService;
 import de.rgse.timecap.service.UserData;
 import de.rgse.timecap.tasks.PostInstantTask;
@@ -39,7 +40,10 @@ import static android.R.attr.data;
 
 public class NfcActivity extends AppCompatActivity {
 
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault());
+    static {
+        Locale.setDefault(Locale.GERMANY);
+    }
+
     private static final SimpleDateFormat DISPLAY_FORMAT = new SimpleDateFormat("dd. MMMM HH:mm 'Uhr'", Locale.getDefault());
 
     private String intentID;
@@ -152,7 +156,7 @@ public class NfcActivity extends AppCompatActivity {
                 JsonObject data = json.get("data");
                 String formatedTime = null;
                 try {
-                    formatedTime = DISPLAY_FORMAT.format(DATE_FORMAT.parse(data.getString("instant")));
+                    formatedTime = DISPLAY_FORMAT.format(IOUtil.formatDate(data.getString("instant")));
 
                     time.setText(formatedTime);
                     timeLabel.setVisibility(View.VISIBLE);
@@ -168,6 +172,7 @@ public class NfcActivity extends AppCompatActivity {
 
             @Override
             public void fail(Integer responseCode, JsonObject data) {
+                postRawData.setInstant(Calendar.getInstance(Locale.GERMANY));
                 UserData.queueEvent(NfcActivity.this, postRawData);
                 ErrorDialog.show(data, NfcActivity.this);
             }

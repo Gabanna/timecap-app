@@ -1,16 +1,11 @@
 package de.rgse.timecap.model;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import de.rgse.timecap.fassade.JsonObject;
+import de.rgse.timecap.service.IOUtil;
 
 public class PostRawData {
-
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yy-MM-dd'T'HH:mm:ss");
 
     private final String userId;
     private final String locationId;
@@ -23,7 +18,7 @@ public class PostRawData {
     }
 
     public PostRawData(String userId, String locationId, Calendar instant) {
-        this.instant = null == instant ? null : DATE_FORMAT.format(instant.getTime());
+        this.instant = null == instant ? null : IOUtil.formatDate(instant.getTime());
         this.userId = userId;
         this.locationId = locationId;
     }
@@ -64,6 +59,6 @@ public class PostRawData {
     }
 
     public void setInstant(Calendar instant) {
-        this.instant = DATE_FORMAT.format(instant.getTime());
+        this.instant = IOUtil.formatDate(instant.getTime());
     }
 }
