@@ -3,6 +3,7 @@ package de.rgse.timecap;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.view.menu.MenuView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -12,18 +13,23 @@ import android.widget.Button;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+import com.google.android.gms.common.api.CommonStatusCodes;
 
 import java.util.Locale;
 
 import de.rgse.timecap.fassade.JsonObject;
 import de.rgse.timecap.service.LoginService;
+import de.rgse.timecap.service.TimecapProperties;
 import de.rgse.timecap.service.UserData;
+import de.rgse.timecap.tasks.DownloadImageTask;
 
 public class MainActivity extends AppCompatActivity {
 
     static {
         Locale.setDefault(Locale.GERMANY);
     }
+
+    private LoginService loginService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +76,10 @@ public class MainActivity extends AppCompatActivity {
                 GoogleSignInAccount account = result.getSignInAccount();
                 JsonObject jsonObject = JsonObject.createUserData(account);
                 UserData.instance(this).set("account", jsonObject.toString());
+            } else {
+                if (result.getStatus().getStatusCode() == CommonStatusCodes.NETWORK_ERROR) {
+                    ErrorDialog.show(new JsonObject(), this);
+                }
             }
         }
     }
@@ -78,8 +88,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         if (!UserData.hasAccount(this)) {
-            new LoginService(this).login();
+            loginService = new LoginService(this);
+            loginService.login();
         } else {
+            String photoUrl = UserData.getAccount(this).get("photoUrl");
+            if(photoUrl != null) {
+                new DownloadImageTask(this).execute(photoUrl);
+
+            }
+
             new EventQueueWorker().onReceive(this, getIntent());
         }
     }

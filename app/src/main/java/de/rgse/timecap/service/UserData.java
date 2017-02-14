@@ -1,6 +1,7 @@
 package de.rgse.timecap.service;
 
 import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 
@@ -12,14 +13,16 @@ import de.rgse.timecap.model.Timeevent;
 
 public class UserData {
 
-    private static final String EVENT_QUEUE = "eventQueue";
+    public static final String SERVER_URL = "serverUrl";
+    public static final String EVENT_QUEUE = "eventQueue";
 
     private static UserData instance;
 
     private SharedPreferences sharedPreferences;
 
-    private UserData(Context activity) {
-        sharedPreferences = activity.getApplicationContext().getSharedPreferences("userData", Context.MODE_PRIVATE);
+    private UserData(Context context) {
+        Context applicationContext = context instanceof Application ? context : context.getApplicationContext();
+        sharedPreferences = applicationContext.getSharedPreferences("userData", Context.MODE_PRIVATE);
     }
 
     public static UserData instance(Context context) {

@@ -1,11 +1,8 @@
 package de.rgse.timecap;
 
-import android.app.usage.NetworkStatsManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.wifi.WifiManager;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
@@ -21,6 +18,7 @@ import android.widget.Toast;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+import com.google.android.gms.common.api.CommonStatusCodes;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -30,13 +28,11 @@ import java.util.UUID;
 
 import de.rgse.timecap.fassade.JsonObject;
 import de.rgse.timecap.model.PostRawData;
-import de.rgse.timecap.model.Timeevent;
 import de.rgse.timecap.service.IOUtil;
 import de.rgse.timecap.service.LoginService;
+import de.rgse.timecap.service.TimecapProperties;
 import de.rgse.timecap.service.UserData;
 import de.rgse.timecap.tasks.PostInstantTask;
-
-import static android.R.attr.data;
 
 public class NfcActivity extends AppCompatActivity {
 
@@ -46,8 +42,10 @@ public class NfcActivity extends AppCompatActivity {
 
     private static final SimpleDateFormat DISPLAY_FORMAT = new SimpleDateFormat("dd. MMMM HH:mm 'Uhr'", Locale.getDefault());
 
+    private LinearLayout layout;
     private String intentID;
     private TextView user, userLabel, location, locationLabel, time, timeLabel;
+    private LoginService loginService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +53,12 @@ public class NfcActivity extends AppCompatActivity {
         setContentView(R.layout.activity_nfc);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        if (!UserData.instance(this).has(UserData.SERVER_URL)) {
+            UserData.instance(this).set(UserData.SERVER_URL, TimecapProperties.readProperty("rest.baseUrl"));
+        }
+
+        layout = (LinearLayout) findViewById(R.id.content_nfc);
 
         time = (TextView) findViewById(R.id.time_value);
         timeLabel = (TextView) findViewById(R.id.time_label);
@@ -73,7 +77,8 @@ public class NfcActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         if (!UserData.hasAccount(this)) {
-            new LoginService(this).login();
+            loginService = new LoginService(this);
+            loginService.login();
         }
     }
 
@@ -106,7 +111,6 @@ public class NfcActivity extends AppCompatActivity {
                     createTask(postRawData).execute(postRawData);
 
                 } else {
-                    LinearLayout layout = (LinearLayout) findViewById(R.id.content_nfc);
                     layout.removeView(findViewById(R.id.loading));
 
                     Calendar calendar = Calendar.getInstance();
@@ -140,15 +144,18 @@ public class NfcActivity extends AppCompatActivity {
                 UserData.instance(this).set("account", jsonObject.toString());
 
                 onNewIntent(getIntent());
+            } else {
+                if (result.getStatus().getStatusCode() == CommonStatusCodes.NETWORK_ERROR) {
+                    ErrorDialog.show(new JsonObject(), this);
+                }
             }
         }
     }
 
     private PostInstantTask createTask(final PostRawData postRawData) {
-        return new PostInstantTask() {
+        return new PostInstantTask(this) {
             @Override
             public void done(JsonObject json) {
-                LinearLayout layout = (LinearLayout) findViewById(R.id.content_nfc);
                 layout.removeView(findViewById(R.id.loading));
 
                 findViewById(R.id.main_label).setVisibility(View.VISIBLE);
@@ -172,6 +179,7 @@ public class NfcActivity extends AppCompatActivity {
 
             @Override
             public void fail(Integer responseCode, JsonObject data) {
+                layout.removeView(findViewById(R.id.loading));
                 postRawData.setInstant(Calendar.getInstance(Locale.GERMANY));
                 UserData.queueEvent(NfcActivity.this, postRawData);
                 ErrorDialog.show(data, NfcActivity.this);

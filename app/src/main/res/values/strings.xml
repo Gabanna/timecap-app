@@ -12,4 +12,6 @@
     <string name="timestamp">Zeitpunkt</string>
     <string name="capture_label">Folgende Zeit wurde erfasst:</string>
     <string name="signedIn_user">angemeldeter Benutzer</string>
+    <string name="change">Ändern</string>
+    <string name="server_url">Server-Url</string>
 </resources>

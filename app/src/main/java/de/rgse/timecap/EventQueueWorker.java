@@ -41,7 +41,7 @@ public class EventQueueWorker extends BroadcastReceiver {
 
                 while (!eventQueue.isEmpty()) {
                     final PostRawData postRawData = eventQueue.pop();
-                    new PostInstantTask() {
+                    new PostInstantTask(context) {
                         @Override
                         public void done(JsonObject data) {
                             completed.add(postRawData);

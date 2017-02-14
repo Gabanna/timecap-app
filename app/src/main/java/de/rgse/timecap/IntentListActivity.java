@@ -57,7 +57,7 @@ public class IntentListActivity extends AppCompatActivity {
     }
 
     private GetInstantsTask createTask() throws IOException {
-        return new GetInstantsTask() {
+        return new GetInstantsTask(this) {
             @Override
             public void done(JsonObject data) {
                 int responseCode = data.get("responseCode");

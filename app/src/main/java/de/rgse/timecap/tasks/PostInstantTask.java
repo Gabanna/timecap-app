@@ -1,5 +1,6 @@
 package de.rgse.timecap.tasks;
 
+import android.content.Context;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -14,6 +15,7 @@ import de.rgse.timecap.model.PostRawData;
 import de.rgse.timecap.service.IOUtil;
 import de.rgse.timecap.service.JwtService;
 import de.rgse.timecap.service.TimecapProperties;
+import de.rgse.timecap.service.UserData;
 
 public abstract class PostInstantTask extends AbstractRestTask<PostRawData> {
 
@@ -22,9 +24,9 @@ public abstract class PostInstantTask extends AbstractRestTask<PostRawData> {
     private final String urlString;
     private final JwtService jwtService;
 
-    public PostInstantTask() throws TimecapTaskException {
+    public PostInstantTask(Context context) throws TimecapTaskException {
         try {
-            urlString = String.format("%s/time-events", TimecapProperties.readProperty("rest.baseUrl"));
+            urlString = String.format("%s/time-events", UserData.instance(context).get(UserData.SERVER_URL));
             jwtService = new JwtService();
 
         } catch (IOException e) {

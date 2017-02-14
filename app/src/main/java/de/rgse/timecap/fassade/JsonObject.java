@@ -83,7 +83,9 @@ public class JsonObject {
     public static JsonObject createUserData(GoogleSignInAccount account) {
         JsonObject result = new JsonObject();
         result.set("email", account.getEmail());
-        result.set("photoUrl", account.getPhotoUrl().toString());
+        if(account.getPhotoUrl() != null) {
+            result.set("photoUrl", account.getPhotoUrl().toString());
+        }
         return result;
     }
 }

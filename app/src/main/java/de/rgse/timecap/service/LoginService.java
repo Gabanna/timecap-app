@@ -12,18 +12,21 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 
+import java.util.Random;
+
 public class LoginService {
 
     public static final int RC_SIGN_IN = 9001;
 
     private final GoogleApiClient googleApiClient;
-    private Activity activity;
+    private AppCompatActivity activity;
 
     public LoginService(AppCompatActivity activity) {
+        System.out.println("calling loginservice");
         this.activity = activity;
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().build();
-        googleApiClient = new GoogleApiClient.Builder(activity).enableAutoManage(activity,onConnectionFailed()).addApi(Auth.GOOGLE_SIGN_IN_API, gso).build();
+        googleApiClient = new GoogleApiClient.Builder(activity).enableAutoManage(activity, 1, onConnectionFailed()).addApi(Auth.GOOGLE_SIGN_IN_API, gso).build();
     }
 
     public void login() {
@@ -31,6 +34,11 @@ public class LoginService {
         activity.startActivityForResult(signInIntent, RC_SIGN_IN);
     }
 
+    public void disconnectFromGoogleApi() {
+        if(googleApiClient != null) {
+            googleApiClient.stopAutoManage(activity);
+        }
+    }
 
     private GoogleApiClient.OnConnectionFailedListener onConnectionFailed() {
         return new GoogleApiClient.OnConnectionFailedListener() {
